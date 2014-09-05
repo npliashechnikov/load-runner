@@ -10,10 +10,12 @@ The load-runner tool allows the user to prepare an environment to test the netwo
 The load-runner tool requires access to OpenStack API endpoints. For authentication it uses keystone v2.0 endpoint.
 
 The tool spawns VMs that need to have the following:
+```
 1. iperf3 installed
 2. command_agent.py installed and configured to run on boot
 3. The 2 virtual NICs attached to the VMs should both be configured using DHCP and/or using config drive (when Neutron or DHCP server is not stable enough for spawning hundreds of VMs). 
 4. The VM image should be uploaded to glance and made public.
+```
 
 A management network should be created. This network should have connectivity to OpenStack API endpoints. This network should also have “shared” flag set to true so it can be connected to VMs in different projects.
 
