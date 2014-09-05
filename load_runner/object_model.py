@@ -105,7 +105,7 @@ class LoadRunner(object):
             try:
                 test.prepare_environment()
                 test.initialize()
-                test.run_test()
+                test.run_test(output_file)
             except Exception:
                 print "Test failed:", test.name
                 traceback.print_exc()
@@ -173,7 +173,7 @@ class Test(BaseObject):
     def get_children(self):
         return self.tenants
 
-    def run_test(self):
+    def run_test(self, output_file):
         print("run_test()")
         module_name, func_name = self.procedure.rsplit('.', 1)
         print("module_name %s, func_name: %s" % (module_name, func_name))
@@ -189,7 +189,7 @@ class Test(BaseObject):
             print "Function '%s' is not found" % self.procedure
             return
 
-        func(self)
+        func(self, output_file)
 
     def teardown_environment(self):
         self.remove_instances()

@@ -41,7 +41,7 @@ def random_pairs(clients, servers, extend=False):
     return zip(clients, servers)
 
 
-def iperf_pairs_zmq(test):
+def iperf_pairs_zmq(test, output_file):
     tenants = test.tenants
 
     kill_commands = []
@@ -83,7 +83,7 @@ def iperf_pairs_zmq(test):
         client_commands, iperf3.Iperf3Stats(test),
         test.args.get('client_timeout', 600))
 
-    client_results.output()
+    client_results.output(output_file)
 
 
 def ping_pairs(test):
@@ -111,7 +111,7 @@ def ping_pairs(test):
     results.output()
 
 
-def iperf_gateway(test):
+def iperf_gateway(test, output_file):
     # Generate list of servers
     def server_list():
         ips = ['10.119.150.' + str(i) for i in range(194, 213)]
@@ -138,10 +138,10 @@ def iperf_gateway(test):
         client_commands, iperf3.Iperf3Stats(test),
         test.args.get('client_timeout', 600))
 
-    client_results.output()
+    client_results.output(output_file)
 
 
-def iperf_pairs_duplex(test):
+def iperf_pairs_duplex(test, output_file):
     tenants = test.tenants
 
     kill_commands = []
@@ -183,4 +183,4 @@ def iperf_pairs_duplex(test):
         client_commands, iperf3.Iperf3Stats(test),
         test.args.get('client_timeout', 600))
 
-    client_results.output()
+    client_results.output(output_file)

@@ -133,7 +133,7 @@ class Iperf3Stats(object):
             stream_stats_snd = aggregate_stream_stats(json_result, 'sender')
             self.update(stream_stats_rcv, stream_stats_snd)
 
-    def output(self):
+    def output(self, output_file):
         test = self.test
         args = test.args
         iperf_args = args.get('iperf_args', [])
@@ -201,7 +201,11 @@ class Iperf3Stats(object):
             ('CPU system max snd', self.cpu_system_max_snd),
             ('CPU system avg snd', self.cpu_system_avg_sum_snd / self.num_vms),
         ])
-        writer = csv.writer(sys.stdout)
+        if not output_file:
+            fp = sys.stdout
+        else:
+            fp = open(output_file, 'a')
+        writer = csv.writer(fp)
         writer.writerow(result.keys())
         writer.writerow(result.values())
 
