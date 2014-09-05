@@ -36,8 +36,8 @@ class ServersSpawner:
     current_heur = 0
 
     @classmethod
-    def spawn_server(cls, name, tenant_id, network_id, key_name, availability_zone,
-                     scheduler_hints):
+    def spawn_server(cls, name, tenant_id, network_id, key_name,
+                     availability_zone, scheduler_hints):
         client = get_nova_client(tenant_id)
         server = client.servers.create(
             name, settings.IMAGE_ID, settings.FLAVOR_ID,
@@ -273,14 +273,14 @@ def create_server_dhcp(tenant_id, network_id, name, key_name,
         if hasattr(server, 'networks'):
             try:
                 server_nets = server.networks
-	        #FIXME
-                #management_ip = server_nets.pop(
-                #    settings.MANAGEMENT_NET_NAME)[0]
-                #private_ip = server_nets.values()[0][0]
-                server_ips = server_nets.pop(
-                    settings.MANAGEMENT_NET_NAME)
-                management_ip = server_ips[0]
-                private_ip = server_ips[1]
+                management_ip = server_nets.pop(
+                    settings.MANAGEMENT_NET_NAME)[0]
+                private_ip = server_nets.values()[0][0]
+                #FIXME
+                #server_ips = server_nets.pop(
+                #    settings.MANAGEMENT_NET_NAME)
+                #management_ip = server_ips[0]
+                #private_ip = server_ips[1]
                 break
             except Exception, e:
                 print e.message
