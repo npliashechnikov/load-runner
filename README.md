@@ -55,7 +55,7 @@ UPDATE_NEUTRON_QUOTAS = False # True if network quotas need to be updated.
 USE_DHCP = True # 'True' if network should be configured by DHCP. 'False' if configured by config drive.
 ```
 
-#### vim tests.yml
+#### vim test.yml
 The tests can be described in this YAML file. Look at tests/ directory for more examples with availability zones, etc.
 ```
 tests:
