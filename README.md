@@ -32,26 +32,25 @@ Load-runner should be executed from a machine that has IPv4 route to the managem
 #### vim load_runner/settings.py
 
 ```
-1. CONTROLLER_IP = '172.16.0.2' # This is the IP address of the controller
-2. OS_AUTH_URL = 'http://%s:5000/v2.0/' % CONTROLLER_IP # URL pointing to public keystone API endpoint
-3. OS_SERVICE_ENDPOINT = 'http://%s:35357/v2.0/' % CONTROLLER_IP # URL pointing to  keystone API service endpoint
-4. OS_USERNAME = 'admin' # Name of user with admin role
-5. OS_TENANT = 'admin' # Name of project in which user have admin role
-6. OS_PASSWORD = 'secrete' # Password for admin user
-7. OS_TOKEN = 'PKUiCQHi' # Keystone service token
-8. SPAWN_DELAY = 0 # Delay in seconds between booting VMs to lower load on cluster
-9. ACTIVATION_TIMEOUT = 120 # Wait time in seconds for VM state to change to ACTIVE
-10. BOOT_TIMEOUT = 300 # Wait time in seconds for VM boot
-11. TEST_TIMEOUT = 120 # Wait time in seconds to finish tests
-12. MANAGEMENT_NETWORK_ID = '9398a44e-c170-4e50-affc-e4f321a67069' # UUID of the management network
-13. MANAGEMENT_NET_NAME = 'mgmtnet' # Name of the management network
-14. MANAGEMENT_CIDR = '192.168.111.0/24' # Management network CIDR
-15. PRIVATE_CIDR = '192.168.0.0/24' # Base CIDR for private networks
-16. FLAVOR_ID = '6' # Flavor ID of the iperf VM image.
-17. IMAGE_ID = '0e6cfb31-5bd3-420f-b9a9-9494d5f3907a' # UUID of the iperf VM image.
-18. ROOT_DIR = '/tmp' 
-19. UPDATE_NEUTRON_QUOTAS = False # True if network quotas need to be updated.
-20. USE_DHCP = True # 'True' if network should be configured by DHCP. 'False' if configured by config drive.
+CONTROLLER_IP = '172.16.0.2' # This is the IP address of the controller
+OS_AUTH_URL = 'http://%s:5000/v2.0/' % CONTROLLER_IP # URL pointing to public keystone API endpoint
+OS_SERVICE_ENDPOINT = 'http://%s:35357/v2.0/' % CONTROLLER_IP # URL pointing to  keystone API service endpoint
+OS_USERNAME = 'admin' # Name of user with admin role
+OS_TENANT = 'admin' # Name of project in which user have admin role
+OS_PASSWORD = 'secrete' # Password for admin user
+OS_TOKEN = 'PKUiCQHi' # Keystone service token
+SPAWN_DELAY = 0 # Delay in seconds between booting VMs to lower load on cluster
+ACTIVATION_TIMEOUT = 120 # Wait time in seconds for VM state to change to ACTIVE
+BOOT_TIMEOUT = 300 # Wait time in seconds for VM boot
+TEST_TIMEOUT = 120 # Wait time in seconds to finish tests
+MANAGEMENT_NETWORK_ID = '9398a44e-c170-4e50-affc-e4f321a67069' # UUID of the management network
+MANAGEMENT_NET_NAME = 'mgmtnet' # Name of the management network
+MANAGEMENT_CIDR = '192.168.111.0/24' # Management network CIDR
+PRIVATE_CIDR = '192.168.0.0/24' # Base CIDR for private networks
+FLAVOR_ID = '6' # Flavor ID of the iperf VM image.
+IMAGE_ID = '0e6cfb31-5bd3-420f-b9a9-9494d5f3907a' # UUID of the iperf VM image.
+UPDATE_NEUTRON_QUOTAS = False # True if network quotas need to be updated.
+USE_DHCP = True # 'True' if network should be configured by DHCP. 'False' if configured by config drive.
 ```
 
 #### vim tests.yml
