@@ -1,0 +1,193 @@
+username: root
+keyfile: /home/ubuntu/ssh_key2
+tests:
+  - name: route_6060_4thd_1470b_tcp_samerack
+    procedure: load_runner.tests.iperf_pairs_duplex
+    args:
+      iperf_args: ['-t', '120', '-P', '4', '-V', '-Z', '-M', '1470']
+    tenants:
+      - name: rte_l3_test
+        count: 30
+        router_args:
+          distributed: True
+        networks:
+          - name: rcv_private
+            count: 2
+            servers:
+              - role: server
+                count: 1
+                availability_zones: ['rack_14:node-13', 'rack_14:node-9', 'rack_14:node-6', 'rack_14:node-10', 'rack_14:node-11', 'rack_14:node-33', 'rack_14:node-34', 'rack_14:node-29']
+          - name: gen_private
+            count: 2
+            servers:
+              - role: client
+                count: 1
+                availability_zones: ['rack_14:node-12', 'rack_14:node-35', 'rack_14:node-31', 'rack_14:node-30', 'rack_14:node-28', 'rack_14:node-32', 'rack_14:node-40', 'rack_14:node-39']
+
+  - name: route_6060_4thd_1470b_tcp_twonodes_samerack
+    procedure: load_runner.tests.iperf_pairs_duplex
+    args:
+      iperf_args: ['-t', '120', '-P', '4', '-V', '-Z', '-M', '1470']
+    tenants:
+      - name: rte_l3_test
+        count: 1
+        router_args:
+          distributed: True
+          
+        networks:
+          - name: rcv_private
+            count: 5
+            servers:
+              - role: server
+                count: 1
+                availability_zones: ['rack_14:node-13']
+          - name: gen_private
+            count: 5
+            servers:
+              - role: client
+                count: 1
+                availability_zones: ['rack_14:node-12']
+
+  - name: route_6060_4thd_1470b_tcp_twonodes_difrack
+    procedure: load_runner.tests.iperf_pairs_duplex
+    args:
+      iperf_args: ['-t', '120', '-P', '4', '-V', '-Z', '-M', '1470']
+    tenants:
+      - name: rte_l3_test
+        router_args:
+          distributed: True
+          
+        count: 1
+        networks:
+          - name: rcv_private
+            count: 5
+            servers:
+              - role: server
+                count: 1
+                availability_zones: ['rack_14:node-13']
+          - name: gen_private
+            count: 5
+            servers:
+              - role: client
+                count: 1
+                availability_zones: ['rack_13:node-27']
+
+  - name: route_6060_4thd_1470b_tcp_fullmesh
+    procedure: load_runner.tests.iperf_pairs_duplex
+    args:
+      iperf_args: ['-t', '120', '-P', '4', '-V', '-Z', '-M', '1470']
+    tenants:
+      - name: rte_l3_test
+        router_args:
+          distributed: True
+          
+        count: 30
+        networks:
+          - name: rcv_private
+            count: 2
+            servers:
+              - role: server
+                count: 1
+                availability_zones: ['rack_13', 'rack_14', 'rack_15']
+          - name: gen_private
+            count: 2
+            servers:
+              - role: client
+                count: 1
+                availability_zones: ['rack_16', 'rack_17', 'rack_18', 'rack_19']
+
+  - name: route_6060_4thd_1470b_tcp_fullmesh_20net
+    procedure: load_runner.tests.iperf_pairs_duplex
+    args:
+      iperf_args: ['-t', '120', '-P', '4', '-V', '-Z', '-M', '1470']
+    tenants:
+      - name: rte_l3_test
+        router_args:
+          distributed: True
+          
+        count: 6
+        networks:
+          - name: rcv_private
+            count: 10
+            servers:
+              - role: server
+                count: 1
+                availability_zones: ['rack_13', 'rack_14', 'rack_15']
+          - name: gen_private
+            count: 10
+            servers:
+              - role: client
+                count: 1
+                availability_zones: ['rack_16', 'rack_17', 'rack_18', 'rack_19']
+
+  - name: route_6060_4thd_1470b_tcp_fullmesh_40net
+    procedure: load_runner.tests.iperf_pairs_duplex
+    args:
+      iperf_args: ['-t', '120', '-P', '4', '-V', '-Z', '-M', '1470']
+    tenants:
+      - name: rte_l3_test
+        router_args:
+          distributed: True
+          
+        count: 3
+        networks:
+          - name: rcv_private
+            count: 20
+            servers:
+              - role: server
+                count: 1
+                availability_zones: ['rack_13', 'rack_14', 'rack_15']
+          - name: gen_private
+            count: 20
+            servers:
+              - role: client
+                count: 1
+                availability_zones: ['rack_16', 'rack_17', 'rack_18', 'rack_19']
+
+  - name: route_6060_4thd_1470b_tcp_fullmesh_60net
+    procedure: load_runner.tests.iperf_pairs_duplex
+    args:
+      iperf_args: ['-t', '120', '-P', '4', '-V', '-Z', '-M', '1470']
+    tenants:
+      - name: rte_l3_test
+        router_args:
+          distributed: True
+          
+        count: 2
+        networks:
+          - name: rcv_private
+            count: 30
+            servers:
+              - role: server
+                count: 1
+                availability_zones: ['rack_13', 'rack_14', 'rack_15']
+          - name: gen_private
+            count: 30
+            servers:
+              - role: client
+                count: 1
+                availability_zones: ['rack_16', 'rack_17', 'rack_18', 'rack_19']
+
+  - name: route_6060_4thd_1470b_tcp_tworacks
+    procedure: load_runner.tests.iperf_pairs_duplex
+    args:
+      iperf_args: ['-t', '120', '-P', '4', '-V', '-Z', '-M', '1470']
+    tenants:
+      - name: rte_l3_test
+        count: 30
+        router_args:
+          distributed: True
+          
+        networks:
+          - name: rcv_private
+            count: 2
+            servers:
+              - role: server
+                count: 1
+                availability_zones: ['rack_13']
+          - name: gen_private
+            count: 2
+            servers:
+              - role: client
+                count: 1
+                availability_zones: ['rack_16']

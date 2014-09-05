@@ -1,0 +1,15 @@
+tests:
+  - name: iperf_smoke_test
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '3']
+    tenants:
+      - name: iperf_smoke_test
+        networks:
+          - name: private
+            floating_ip: public
+            servers:
+              - role: server
+                count: 1
+              - role: client
+                count: 1

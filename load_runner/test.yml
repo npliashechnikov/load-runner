@@ -1,0 +1,136 @@
+tests:
+
+  - name: gateway
+    procedure: load_runner.tests.iperf_gateway
+    args:
+      iperf_args: ['-t', '15', '-P', '10']
+      iperf_servers:
+        - ips: [10.0.0.5, 10.0.0.6]
+          min_port: 8200
+          max_port: 8230
+    tenants:
+      - name: iperf_smoke_rack13
+        networks:
+          - name: private
+            servers:
+              - role: client
+                count: 1
+
+  ###########################################################################
+  ### Same rack, TCP
+  ###########################################################################
+  - name: iperf_smoke_rack13
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '15']
+    tenants:
+      - name: iperf_smoke_rack13
+        networks:
+          - name: private
+            floating_ip: public
+            servers:
+              - role: server
+                count: 1
+              - role: client
+                count: 1
+
+  - name: iperf_1_tenants_10_vms_l2_rack13
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '10', '-V', '-Z']
+    tenants:
+      - name: iperf_tcp_1_tenants_10_vms_l2_rack13
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 5
+                availability_zones: [ 'rack-13:node-244.domain.tld' ]
+              - role: client
+                count: 5
+                availability_zones: [ 'rack-13:node-297.domain.tld' ]
+
+  - name: iperf_tcp_tworacks_saturation
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '4', '-l', '512k', '-V', '-Z']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 60
+                availability_zones: [ 'rack-16' ]
+              - role: client
+                count: 60
+                availability_zones: [ 'rack-18' ]
+
+  - name: iperf_tcp_tworacks_saturation_small
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '15', '-P', '4', '-l', '512k', '-V', '-Z']
+      client_timeout: 60
+    tenants:
+      - name: iperf_tcp_tworacks_saturation
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 10
+                availability_zones: [ 'rack-16' ]
+              - role: client
+                count: 10
+                availability_zones: [ 'rack-18' ]
+
+  - name: iperf_tcp_tworacks_saturation_medium
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '15', '-P', '4', '-l', '512k', '-V', '-Z']
+      client_timeout: 180
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 60
+                availability_zones: [ 'rack-16' ]
+              - role: client
+                count: 60
+                availability_zones: [ 'rack-18' ]
+
+
+  - name: iperf_tcp_fullblown_saturation
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '45', '-P', '4', '-l', '512k', '-V', '-Z']
+      client_timeout: 180
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 53
+                availability_zones: [ 'rack-13' ]
+              - role: server
+                count: 53
+                availability_zones: [ 'rack-14' ]
+              - role: server
+                count: 54
+                availability_zones: [ 'rack-15' ]
+
+              - role: client
+                count: 40
+                availability_zones: [ 'rack-16' ]
+              - role: client
+                count: 40
+                availability_zones: [ 'rack-17' ]
+              - role: client
+                count: 40
+                availability_zones: [ 'rack-18' ]
+
+              - role: client
+                count: 40
+                availability_zones: [ 'rack-19' ]

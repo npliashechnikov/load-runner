@@ -1,0 +1,536 @@
+username: root
+keyfile: /home/ubuntu/ssh_key2
+#password: r00tme
+#keyname: alex
+tests:
+  - name: single_1thd_512b_tcp_small
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '1', '-V', '-Z', '-M', '512']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 1
+                availability_zones: [ 'rack_13:node-23' ]
+              - role: client
+                count: 1
+                availability_zones: [ 'rack_13:node-8' ]
+
+  - name: single_1thd_1024b_tcp_small
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '1', '-V', '-Z', '-M', '1024']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 1
+                availability_zones: [ 'rack_13:node-23' ]
+              - role: client
+                count: 1
+                availability_zones: [ 'rack_13:node-8' ]
+
+  - name: single_1thd_1470b_tcp_small
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '1', '-V', '-Z', '-M', '1470']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 1
+                availability_zones: [ 'rack_13:node-23' ]
+              - role: client
+                count: 1
+                availability_zones: [ 'rack_13:node-8' ]
+
+  - name: single_25thd_512b_tcp_small
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '25', '-V', '-Z', '-M', '512']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 1
+                availability_zones: [ 'rack_13:node-23' ]
+              - role: client
+                count: 1
+                availability_zones: [ 'rack_13:node-8' ]
+
+  - name: single_25thd_1024b_tcp_small
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '25', '-V', '-Z', '-M', '1024']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 1
+                availability_zones: [ 'rack_13:node-23' ]
+              - role: client
+                count: 1
+                availability_zones: [ 'rack_13:node-8' ]
+
+  - name: single_25thd_1470b_tcp_small
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '25', '-V', '-Z', '-M', '1470']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 1
+                availability_zones: [ 'rack_13:node-23' ]
+              - role: client
+                count: 1
+                availability_zones: [ 'rack_13:node-8' ]
+
+  - name: single_1thd_512b_tcp_medium
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '1', '-V', '-Z', '-M', '512']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 10
+                availability_zones: [ 'rack_13:node-23' ]
+              - role: client
+                count: 10
+                availability_zones: [ 'rack_13:node-8' ]
+
+  - name: single_1thd_1024b_tcp_medium
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '1', '-V', '-Z', '-M', '1024']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 10
+                availability_zones: [ 'rack_13:node-23' ]
+              - role: client
+                count: 10
+                availability_zones: [ 'rack_13:node-8' ]
+
+  - name: single_1thd_1470b_tcp_medium
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '2', '-V', '-Z', '-M', '1470']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 10
+                availability_zones: [ 'rack_13:node-23' ]
+              - role: client
+                count: 10
+                availability_zones: [ 'rack_13:node-8' ]
+
+  - name: single_25thd_512b_tcp_medium
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '25', '-V', '-Z', '-M', '512']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 10
+                availability_zones: [ 'rack_13:node-23' ]
+              - role: client
+                count: 10
+                availability_zones: [ 'rack_13:node-8' ]
+
+  - name: single_25thd_1024b_tcp_medium
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '25', '-V', '-Z', '-M', '1024']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 10
+                availability_zones: [ 'rack_13:node-23' ]
+              - role: client
+                count: 10
+                availability_zones: [ 'rack_13:node-8' ]
+
+  - name: single_25thd_1470b_tcp_medium
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '25', '-V', '-Z', '-M', '1470']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 10
+                availability_zones: [ 'rack_13:node-23' ]
+              - role: client
+                count: 10
+                availability_zones: [ 'rack_13:node-8' ]
+
+
+  - name: single_1thd_512b_tcp_large
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '1', '-V', '-Z', '-M', '512']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 25
+                availability_zones: [ 'rack_13:node-23' ]
+              - role: client
+                count: 25
+                availability_zones: [ 'rack_13:node-8' ]
+
+  - name: single_1thd_1024b_tcp_large
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '1', '-V', '-Z', '-M', '1024']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 25
+                availability_zones: [ 'rack_13:node-23' ]
+              - role: client
+                count: 25
+                availability_zones: [ 'rack_13:node-8' ]
+
+  - name: single_1thd_1470b_tcp_large
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '2', '-V', '-Z', '-M', '1470']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 25
+                availability_zones: [ 'rack_13:node-23' ]
+              - role: client
+                count: 25
+                availability_zones: [ 'rack_13:node-8' ]
+
+  - name: single_25thd_512b_tcp_large
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '25', '-V', '-Z', '-M', '512']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 25
+                availability_zones: [ 'rack_13:node-23' ]
+              - role: client
+                count: 25
+                availability_zones: [ 'rack_13:node-8' ]
+
+  - name: single_25thd_1024b_tcp_large
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '25', '-V', '-Z', '-M', '1024']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 25
+                availability_zones: [ 'rack_13:node-23' ]
+              - role: client
+                count: 25
+                availability_zones: [ 'rack_13:node-8' ]
+
+  - name: single_25thd_1470b_tcp_large
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '25', '-V', '-Z', '-M', '1470']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 25
+                availability_zones: [ 'rack_13:node-23' ]
+              - role: client
+                count: 25
+                availability_zones: [ 'rack_13:node-8' ]
+
+  - name: sat_1thd_512b_tcp_small
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '180', '-P', '1', '-V', '-Z', '-M', '512']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 30
+                availability_zones: [ 'rack_13' ]
+              - role: client
+                count: 30
+                availability_zones: [ 'rack_14' ]
+
+  - name: sat_1thd_1024b_tcp_small
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '180', '-P', '1', '-V', '-Z', '-M', '1024']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 30
+                availability_zones: [ 'rack_13' ]
+              - role: client
+                count: 30
+                availability_zones: [ 'rack_14' ]
+
+  - name: sat_1thd_1470b_tcp_small
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '180', '-P', '1', '-V', '-Z', '-M', '1470']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 30
+                availability_zones: [ 'rack_13' ]
+              - role: client
+                count: 30
+                availability_zones: [ 'rack_14' ]
+
+
+  - name: sat_25thd_512b_tcp_small
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '25', '-V', '-Z', '-M', '512']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 30
+                availability_zones: [ 'rack_13' ]
+              - role: client
+                count: 30
+                availability_zones: [ 'rack_14' ]
+
+  - name: sat_25thd_1024b_tcp_small
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '25', '-V', '-Z', '-M', '1024']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 30
+                availability_zones: [ 'rack_13' ]
+              - role: client
+                count: 30
+                availability_zones: [ 'rack_14' ]
+
+  - name: sat_25thd_1470b_tcp_small
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '25', '-V', '-Z', '-M', '1470']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 30
+                availability_zones: [ 'rack_13' ]
+              - role: client
+                count: 30
+                availability_zones: [ 'rack_14' ]
+
+
+  - name: sat_1thd_1470b_tcp_large
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '180', '-P', '2', '-V', '-Z', '-M', '1470']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 160
+                availability_zones: ['rack_13', 'rack_14', 'rack_15']
+              - role: client
+                count: 160
+                availability_zones: ['rack_16', 'rack_17', 'rack_18', 'rack_19']
+
+  - name: sat_2thd_1470b_tcp_1rack_small
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '2', '-V', '-Z', '-l', '1470']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 30
+                availability_zones: ['rack_14:node-13', 'rack_14:node-9', 'rack_14:node-6', 'rack_14:node-10', 'rack_14:node-11', 'rack_14:node-33', 'rack_14:node-34', 'rack_14:node-29']
+              - role: client
+                count: 30
+                availability_zones: ['rack_14:node-12', 'rack_14:node-35', 'rack_14:node-31', 'rack_14:node-30', 'rack_14:node-28', 'rack_14:node-32', 'rack_14:node-40', 'rack_14:node-39']
+
+  - name: sat_2thd_1470b_tcp_1rack_medium
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '2', '-V', '-Z', '-l', '1470']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 60
+                availability_zones: ['rack_14:node-13', 'rack_14:node-9', 'rack_14:node-6', 'rack_14:node-10', 'rack_14:node-11', 'rack_14:node-33', 'rack_14:node-34', 'rack_14:node-29']
+              - role: client
+                count: 60
+                availability_zones: ['rack_14:node-12', 'rack_14:node-35', 'rack_14:node-31', 'rack_14:node-30', 'rack_14:node-28', 'rack_14:node-32', 'rack_14:node-40', 'rack_14:node-39']
+
+  - name: sat_2thd_1470b_tcp_1rack_large
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '2', '-V', '-Z', '-l', '1470']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 90
+                availability_zones: ['rack_14:node-13', 'rack_14:node-9', 'rack_14:node-6', 'rack_14:node-10', 'rack_14:node-11', 'rack_14:node-33', 'rack_14:node-34', 'rack_14:node-29']
+              - role: client
+                count: 90
+                availability_zones: ['rack_14:node-12', 'rack_14:node-35', 'rack_14:node-31', 'rack_14:node-30', 'rack_14:node-28', 'rack_14:node-32', 'rack_14:node-40', 'rack_14:node-39']
+
+  - name: sat_2thd_1470b_tcp_1rack_xlarge
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '2', '-V', '-Z', '-l', '1470']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 150
+                availability_zones: ['rack_14:node-13', 'rack_14:node-9', 'rack_14:node-6', 'rack_14:node-10', 'rack_14:node-11', 'rack_14:node-33', 'rack_14:node-34', 'rack_14:node-29']
+              - role: client
+                count: 150
+                availability_zones: ['rack_14:node-12', 'rack_14:node-35', 'rack_14:node-31', 'rack_14:node-30', 'rack_14:node-28', 'rack_14:node-32', 'rack_14:node-40', 'rack_14:node-39']
+
+  - name: sat_2thd_1470b_tcp_2racks_small
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '2', '-V', '-Z', '-l', '1470']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 30
+                availability_zones: ['rack_13']
+              - role: client
+                count: 30
+                availability_zones: ['rack_14']
+
+  - name: sat_2thd_1470b_tcp_2racks_medium
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '2', '-V', '-Z', '-l', '1470']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 60
+                availability_zones: ['rack_13']
+              - role: client
+                count: 60
+                availability_zones: ['rack_14']
+
+  - name: sat_2thd_1470b_tcp_2racks_large
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '2', '-V', '-Z', '-l', '1470']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 90
+                availability_zones: ['rack_13']
+              - role: client
+                count: 90
+                availability_zones: ['rack_14']
+
+  - name: sat_2thd_1470b_tcp_2racks_xlarge
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '2', '-V', '-Z', '-l', '1470']
+    tenants:
+      - name: iperf_tcp_tworacks_saturation_medium
+        networks:
+          - name: private
+            servers:
+              - role: server
+                count: 150
+                availability_zones: ['rack_13']
+              - role: client
+                count: 150
+                availability_zones: ['rack_14']
+
