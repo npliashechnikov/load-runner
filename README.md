@@ -3,7 +3,7 @@ load-runner
 
 # Description
 
-The load-runner tool allows the user to prepare an environment to test the network performance in the OpenStack cloud. The tests use iperf running between clients and servers and then demonstrate the results in csv format. 
+The load-runner tool prepares an environment to benchmark the network performance in the OpenStack cloud. The tests use iperf running between client and server virtual machines and then demonstrate the results in csv format.
 
 # Prerequisites
 
