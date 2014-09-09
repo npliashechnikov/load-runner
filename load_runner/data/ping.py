@@ -87,7 +87,7 @@ class PingStats(object):
             else:
                 print 'No ping to <TDOD: address>'
 
-    def output(self):
+    def output(self, output_file):
         test = self.test
         args = test.args
 
@@ -108,6 +108,11 @@ class PingStats(object):
              self.pings_to_establish_sum / self.num_flows),
             ('count', self.count),
         ])
-        writer = csv.writer(sys.stdout)
+        if not output_file:
+            fp = sys.stdout
+        else:
+            fp = open(output_file, 'a')
+        writer = csv.writer(fp)
         writer.writerow(result.keys())
         writer.writerow(result.values())
+        fp.close()

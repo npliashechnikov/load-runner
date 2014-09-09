@@ -86,7 +86,7 @@ def iperf_pairs_zmq(test, output_file):
     client_results.output(output_file)
 
 
-def ping_pairs(test):
+def ping_pairs(test, output_file):
     ping_count = test.args.get('ping_count', 10)
     tenants = test.tenants
 
@@ -108,7 +108,7 @@ def ping_pairs(test):
         commands, ping.PingStats(test),
         test.args.get('timeout', ping_count * 2))
 
-    results.output()
+    results.output(output_file)
 
 
 def iperf_gateway(test, output_file):
