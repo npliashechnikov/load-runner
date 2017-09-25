@@ -1,17 +1,3 @@
-# Copyright 2014 Symantec.
-#
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
-
 import itertools
 import json
 import random
@@ -41,7 +27,7 @@ def random_pairs(clients, servers, extend=False):
     return zip(clients, servers)
 
 
-def iperf_pairs_zmq(test, output_file):
+def iperf_pairs_zmq(test):
     tenants = test.tenants
 
     kill_commands = []
@@ -83,10 +69,10 @@ def iperf_pairs_zmq(test, output_file):
         client_commands, iperf3.Iperf3Stats(test),
         test.args.get('client_timeout', 600))
 
-    client_results.output(output_file)
+    client_results.output()
 
 
-def ping_pairs(test, output_file):
+def ping_pairs(test):
     ping_count = test.args.get('ping_count', 10)
     tenants = test.tenants
 
@@ -108,10 +94,10 @@ def ping_pairs(test, output_file):
         commands, ping.PingStats(test),
         test.args.get('timeout', ping_count * 2))
 
-    results.output(output_file)
+    results.output()
 
 
-def iperf_gateway(test, output_file):
+def iperf_gateway(test):
     # Generate list of servers
     def server_list():
         ips = ['10.119.150.' + str(i) for i in range(194, 213)]
@@ -138,10 +124,10 @@ def iperf_gateway(test, output_file):
         client_commands, iperf3.Iperf3Stats(test),
         test.args.get('client_timeout', 600))
 
-    client_results.output(output_file)
+    client_results.output()
 
 
-def iperf_pairs_duplex(test, output_file):
+def iperf_pairs_duplex(test):
     tenants = test.tenants
 
     kill_commands = []
@@ -183,4 +169,4 @@ def iperf_pairs_duplex(test, output_file):
         client_commands, iperf3.Iperf3Stats(test),
         test.args.get('client_timeout', 600))
 
-    client_results.output(output_file)
+    client_results.output()

@@ -1,18 +1,4 @@
-# Copyright 2014 Symantec.
-#
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
-
-from keystoneclient.v2_0 import client as keystone
+from keystoneclient.v3.client import Client
 from neutronclient.neutron import client as neutron
 from novaclient.v1_1 import client as nova
 from novaclient import exceptions as nova_exceptions
@@ -28,21 +14,19 @@ neutron_client = None
 nova_clients = {}
 servers = {}
 
-
 class ServersSpawner:
     usable_availability_zones = []
     heuristics = [1, 1, 1, 1, 10, 20]
     instances = []
     current_heur = 0
-
+ 
     @classmethod
-    def spawn_server(cls, name, tenant_id, network_id, key_name,
-                     availability_zone, scheduler_hints):
+    def spawn_server(cls, tenant_id, network_id, key_name, availability_zone, scheduler_hints):
         client = get_nova_client(tenant_id)
         server = client.servers.create(
             name, settings.IMAGE_ID, settings.FLAVOR_ID,
             nics=[{'net-id': settings.MANAGEMENT_NETWORK_ID},
-                  {'net-id': network_id}],
+                 {'net-id': network_id}],
             key_name=key_name,
             availability_zone=availability_zone,
             scheduler_hints=scheduler_hints)
@@ -51,8 +35,17 @@ class ServersSpawner:
 def get_keystone_client():
     global keystone_client
     if keystone_client is None:
-        keystone_client = keystone.Client(
-            token=settings.OS_TOKEN, endpoint=settings.OS_SERVICE_ENDPOINT)
+        url = settings.OS_AUTH_URL
+        keystone_client = Client(user_domain_name=settings.OS_DOMAIN_NAME,
+                                 username=settings.OS_USERNAME, password=settings.OS_PASSWORD,
+                                 project_name=settings.OS_TENANT,
+                                 project_domain_name=settings.OS_DOMAIN_NAME,
+                                 auth_url=url.replace('/v2.0', '/v3'),
+                                 insecure=True,
+                                 region=settings.OS_REGION_NAME,
+                                 endpoint=url.replace('/v2.0', '/v3'))
+        keystone_client.authenticate()
+        
     return keystone_client
 
 
@@ -62,7 +55,7 @@ def get_neutron_client():
         neutron_client = neutron.Client(
             '2.0', auth_url=settings.OS_AUTH_URL,
             username=settings.OS_USERNAME, password=settings.OS_PASSWORD,
-            tenant_name=settings.OS_TENANT)
+            tenant_name=settings.OS_TENANT, insecure=True)
     return neutron_client
 
 
@@ -76,7 +69,7 @@ def get_nova_client(tenant_id=None):
             tenant_name = None
         client = nova.Client(settings.OS_USERNAME, settings.OS_PASSWORD,
                              tenant_name, settings.OS_AUTH_URL,
-                             tenant_id=tenant_id)
+                             tenant_id=tenant_id, insecure=True)
         nova_clients[tenant_id] = client
     return client
 
@@ -85,25 +78,43 @@ def get_or_create_tenant(tenant_name):
     client = get_keystone_client()
 
     try:
-        tenant = client.tenants.find(name=tenant_name)
+        tenant = client.projects.find(name=tenant_name)
     except keystone_exceptions.NotFound:
-        tenant = client.tenants.create(tenant_name)
+        tenant = client.projects.create(tenant_name, settings.OS_DOMAIN_NAME)
         time.sleep(4)
 
     def user_ensure_role(name):
-        for role in client.roles.roles_for_user(user_id, tenant.id):
-            if role.name == name:
-                return
+        role_assignments = client.role_assignments.list(user=user_id, project=tenant.id)
+        our_assignments = []
+        roles_raw = client.roles.list()
+        roles = {}
+        roles_rev = {}
+        for role in roles_raw:
+            roles[role.id] = role.name
+            roles_rev[role.name] = role.id
+        for assignment in role_assignments:
+            if not hasattr(assignment, 'user'):
+                continue
+            if assignment.user['id'] != user_id:
+                continue
+            if not 'project' in assignment.scope:
+                continue
+            if tenant.id != assignment.scope['project']['id']:
+                continue
+            if roles[assignment.role['id']] != name:
+                continue
+            return
         try:
             role_id = client.roles.find(name=name).id
         except keystone_exceptions.NotFound:
+            print "role %s not found." % name
             return
-        client.roles.add_user_role(user_id, role_id, tenant=tenant.id)
+        client.roles.grant(role_id, user=user_id, project=tenant.id)
+
+ 
 
     user_id = client.users.find(name=settings.OS_USERNAME).id
-    user_ensure_role('Member')
     user_ensure_role('admin')
-    user_ensure_role('nova_rw')
 
     if settings.UPDATE_NEUTRON_QUOTAS:
         get_neutron_client().update_quota(
@@ -118,17 +129,12 @@ def get_or_create_tenant(tenant_name):
                     'subnet': 100000
                 }
             })
-    # get_nova_client().quotas.update(
-    #     tenant.id, metadata_items=-1, injected_file_content_bytes=-1, ram=-1,
-    #     floating_ips=-1, security_group_rules=-1, instances=-1, key_pairs=-1,
-    #     injected_files=-1, cores=-1, fixed_ips=-1,
-    #     injected_file_path_bytes=255, security_groups=-1)
     return tenant.id
 
 
 def delete_tenant(tenant_id):
     client = get_keystone_client()
-    client.tenants.delete(tenant_id)
+    client.projects.delete(tenant_id)
 
 
 def get_or_create_network(tenant_id, network_name):
@@ -264,28 +270,27 @@ def create_server_dhcp(tenant_id, network_id, name, key_name,
         key_name=key_name,
         availability_zone=availability_zone,
         scheduler_hints=scheduler_hints)
-
+    initial_t = time.time()
     while True:
+ 
         t = time.time()
         server = client.servers.get(server.id)
         if server.status == 'ERROR':
-            raise Exception("Server %s failed to spawn" % server.id)
+            raise Exception("Server %s failed to spawn"%server.id)
         if hasattr(server, 'networks'):
             try:
                 server_nets = server.networks
-                management_ip = server_nets.pop(
-                    settings.MANAGEMENT_NET_NAME)[0]
+                management_ip = server_nets.pop(settings.MANAGEMENT_NAME)[0]
                 private_ip = server_nets.values()[0][0]
-                #FIXME
-                #server_ips = server_nets.pop(
-                #    settings.MANAGEMENT_NET_NAME)
-                #management_ip = server_ips[0]
-                #private_ip = server_ips[1]
+                #if server.status == 'ACTIVE':
                 break
+                if time.time() - initial_t > settings.BOOT_TIMEOUT:
+                    print "Timeout while waiting for server %s to boot, terminating test." % server.id
+                    import sys
+                    sys.exit(1)
             except Exception, e:
-                print e.message
                 pass
-        time.sleep(0.1)
+        time.sleep(settings.API_QUERY_TIMEOUT)
         print (time.time() - t)
 
     if floating_ip is not None:
@@ -294,6 +299,9 @@ def create_server_dhcp(tenant_id, network_id, name, key_name,
             fip = create_free_floatingip(tenant_id, floating_ip)
         assign_floating_ip(fip, server.id, network_id)
 
+    #server_nets = server.networks
+    #management_ip = server_nets.pop(settings.MANAGEMENT_NAME)[0]
+    #private_ip = server_nets.values()[0][0]
     print "finished creating server"
     return server.id, private_ip, management_ip
 
@@ -398,7 +406,6 @@ def get_ports(tenant_id):
         result.setdefault(port['device_id'], []).append(port['network_id'])
     return result
 
-
 def get_network_servers(network_id):
     client = get_neutron_client()
     result = set()
@@ -414,16 +421,14 @@ def get_network_servers(network_id):
 
 fips = {}
 
-
 def get_free_floatingip(tenant_id, network_id):
     global fips
     client = get_neutron_client()
-    if not tenant_id + network_id in fips:
-        fips[tenant_id + network_id] = client.list_floatingips(
-            tenant_id=tenant_id)['floatingips']
-    for fip in fips[tenant_id + network_id]:
+    if not fips.has_key(tenant_id+network_id):
+        fips[tenant_id+network_id] = client.list_floatingips(tenant_id=tenant_id)['floatingips']
+    for fip in fips[tenant_id+network_id]:
         if fip['port_id'] is None:
-            fips[tenant_id + network_id].remove(fip)
+            fips[tenant_id+network_id].remove(fip)
             return fip
     return None
 
@@ -452,7 +457,6 @@ def assign_floating_ip(fip, server_id, network_id):
 
 
 all_ports = {}
-
 
 def get_data_ip(server_id, network_id, floating_ip):
     x = time.time()

@@ -1,3 +1,4 @@
+---
 tests:
   - name: iperf_smoke_test
     procedure: load_runner.tests.iperf_pairs_zmq
@@ -7,9 +8,278 @@ tests:
       - name: iperf_smoke_test
         networks:
           - name: private
-            floating_ip: public
             servers:
               - role: server
                 count: 1
               - role: client
                 count: 1
+  
+  - name: iperf_samehost
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-M', '1500', '-P', '4', '-V', '-Z']
+    tenants:
+      - name: iperf_samehost
+        networks:
+          - name: private
+            servers:
+              - role: server
+                availability_zones: ['dc1:node-368.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 1
+              - role: client
+                availability_zones: ['dc1:node-368.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 1
+
+  - name: iperf_samehost_9k
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '4', '-V', '-Z']
+    tenants:
+      - name: iperf_samehost
+        networks:
+          - name: private
+            servers:
+              - role: server
+                availability_zones: ['dc1:node-368.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 1
+              - role: client
+                availability_zones: ['dc1:node-368.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 1
+
+  - name: iperf_samehost_5vm
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-M', '1500', '-P', '4', '-V', '-Z']
+    tenants:
+      - name: iperf_samehost
+        networks:
+          - name: private
+            servers:
+              - role: server
+                availability_zones: ['dc1:node-368.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 5
+              - role: client
+                availability_zones: ['dc1:node-368.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 5
+
+  - name: iperf_samehost_5vm_9k
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-M', '1500', '-P', '4', '-V', '-Z']
+    tenants:
+      - name: iperf_samehost
+        networks:
+          - name: private
+            servers:
+              - role: server
+                availability_zones: ['dc1:node-368.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 5
+              - role: client
+                availability_zones: ['dc1:node-368.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 5
+
+  - name: iperf_2hosts_1az
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-M', '1500', '-P', '4', '-V', '-Z']
+    tenants:
+      - name: iperf_2hosts_1az
+        networks:
+          - name: private
+            servers:
+              - role: server
+                availability_zones: ['dc1:node-368.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 1
+              - role: client
+                availability_zones: ['dc1:node-369.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 1
+
+  - name: iperf_3hosts_1az
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '200', '-V', '-Z']
+    tenants:
+      - name: iperf_3hosts_1az
+        networks:
+          - name: private
+            servers:
+              - role: server
+                availability_zones: ['dc1:node-368.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 12
+              - role: client
+                availability_zones: ['dc1:node-369.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-380.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-396.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-398.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 12
+
+  - name: iperf_2hosts_1az_9k
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '4', '-V', '-Z']
+    tenants:
+      - name: iperf_2hosts_1az
+        networks:
+          - name: private
+            servers:
+              - role: server
+                availability_zones: ['dc1:node-368.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 1
+              - role: client
+                availability_zones: ['dc1:node-369.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 1
+  - name: iperf_2hosts_1az_5vm
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-M', '1500', '-P', '4', '-V', '-Z']
+    tenants:
+      - name: iperf_2hosts_1az
+        networks:
+          - name: private
+            servers:
+              - role: server
+                availability_zones: ['dc1:node-368.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 5
+              - role: client
+                availability_zones: ['dc1:node-369.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 5
+  - name: iperf_2hosts_1az_5vm_9k
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '4', '-V', '-Z']
+    tenants:
+      - name: iperf_2hosts_1az
+        networks:
+          - name: private
+            servers:
+              - role: server
+                availability_zones: ['dc1:node-368.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 5
+              - role: client
+                availability_zones: ['dc1:node-369.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 5
+
+  - name: iperf_2hosts_2az
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-M', '1500', '-P', '4', '-V', '-Z']
+    tenants:
+      - name: iperf_2hosts_2az
+        networks:
+          - name: private
+            servers:
+              - role: server
+                availability_zones: ['dc1']
+                count: 1
+              - role: client
+                availability_zones: ['dc2']
+                count: 1
+
+  - name: iperf_2hosts_2az_9k
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '4', '-V', '-Z']
+    tenants:
+      - name: iperf_2hosts_2az
+        networks:
+          - name: private
+            servers:
+              - role: server
+                availability_zones: ['dc1']
+                count: 1
+              - role: client
+                availability_zones: ['dc2']
+                count: 1
+  - name: iperf_2hosts_2az_5vm
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-M', '1500', '-P', '4', '-V', '-Z']
+    tenants:
+      - name: iperf_2hosts_2az
+        networks:
+          - name: private
+            servers:
+              - role: server
+                availability_zones: ['dc1:node-369.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 5
+              - role: client
+                availability_zones: ['dc2:node-366.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 5
+  - name: iperf_2hosts_2az_5vm_9k
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '4', '-V', '-Z']
+    tenants:
+      - name: iperf_2hosts_2az
+        networks:
+          - name: private
+            servers:
+              - role: server
+                availability_zones: ['dc1:node-369.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 5
+              - role: client
+                availability_zones: ['dc2:node-366.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 5
+
+  - name: iperf_1az_mesh
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-M', '1500', '-P', '4', '-V', '-Z']
+    tenants:
+      - name: iperf_1az_mesh
+        networks:
+          - name: private
+            servers:
+              - role: server
+                availability_zones: ['dc1:node-368.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-369.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-380.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-382.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-383.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 25
+              - role: client
+                availability_zones: ['dc1:node-391.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-394.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-396.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-398.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-399.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 25
+
+  - name: iperf_1az_mesh_9k
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '4', '-V', '-Z']
+    tenants:
+      - name: iperf_1az_mesh
+        networks:
+          - name: private
+            servers:
+              - role: server
+                availability_zones: ['dc1:node-368.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-369.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-380.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-382.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-383.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 25
+              - role: client
+                availability_zones: ['dc1:node-391.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-394.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-396.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-398.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-399.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 25
+
+
+  - name: iperf_2az_mesh
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-M', '1500', '-P', '4', '-V', '-Z']
+    tenants:
+      - name: iperf_2az_mesh
+        networks:
+          - name: private
+            servers:
+              - role: server
+                availability_zones: ['dc1:node-368.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-369.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-380.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-382.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-383.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-391.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-394.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-396.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-398.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-399.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 50
+              - role: client
+                availability_zones: ['dc2:node-366.fuel.cloud.fs01.vwf.vwfs-ad', 'dc2:node-377.fuel.cloud.fs01.vwf.vwfs-ad', 'dc2:node-378.fuel.cloud.fs01.vwf.vwfs-ad', 'dc2:node-379.fuel.cloud.fs01.vwf.vwfs-ad', 'dc2:node-389.fuel.cloud.fs01.vwf.vwfs-ad', 'dc2:node-385.fuel.cloud.fs01.vwf.vwfs-ad', 'dc2:node-390.fuel.cloud.fs01.vwf.vwfs-ad', 'dc2:node-397.fuel.cloud.fs01.vwf.vwfs-ad', 'dc2:node-400.fuel.cloud.fs01.vwf.vwfs-ad', 'dc2:node-403.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 50
+
+  - name: iperf_2az_mesh_9k
+    procedure: load_runner.tests.iperf_pairs_zmq
+    args:
+      iperf_args: ['-t', '120', '-P', '4', '-V', '-Z']
+    tenants:
+      - name: iperf_2az_mesh
+        networks:
+          - name: private
+            servers:
+              - role: server
+                availability_zones: ['dc1:node-368.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-369.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-380.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-382.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-383.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-391.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-394.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-396.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-398.fuel.cloud.fs01.vwf.vwfs-ad', 'dc1:node-399.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 50
+              - role: client
+                availability_zones: ['dc2:node-366.fuel.cloud.fs01.vwf.vwfs-ad', 'dc2:node-377.fuel.cloud.fs01.vwf.vwfs-ad', 'dc2:node-378.fuel.cloud.fs01.vwf.vwfs-ad', 'dc2:node-379.fuel.cloud.fs01.vwf.vwfs-ad', 'dc2:node-389.fuel.cloud.fs01.vwf.vwfs-ad', 'dc2:node-385.fuel.cloud.fs01.vwf.vwfs-ad', 'dc2:node-390.fuel.cloud.fs01.vwf.vwfs-ad', 'dc2:node-397.fuel.cloud.fs01.vwf.vwfs-ad', 'dc2:node-400.fuel.cloud.fs01.vwf.vwfs-ad', 'dc2:node-403.fuel.cloud.fs01.vwf.vwfs-ad']
+                count: 50
+

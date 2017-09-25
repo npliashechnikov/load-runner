@@ -1,17 +1,3 @@
-# Copyright 2014 Symantec.
-#
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
-
 import errno
 import itertools
 import netaddr
@@ -105,14 +91,14 @@ class LoadRunner(object):
             try:
                 test.prepare_environment()
                 test.initialize()
-                test.run_test(output_file)
+                test.run_test()
             except Exception:
                 print "Test failed:", test.name
                 traceback.print_exc()
             finally:
-                # try:
+                #try:
                 #    test.teardown_environment()
-                # except Exception:
+                #except Exception:
                 #    print "Teardown for test '%s' failed!" % test.name
                 #    traceback.print_exc()
                 pass
@@ -173,7 +159,7 @@ class Test(BaseObject):
     def get_children(self):
         return self.tenants
 
-    def run_test(self, output_file):
+    def run_test(self):
         print("run_test()")
         module_name, func_name = self.procedure.rsplit('.', 1)
         print("module_name %s, func_name: %s" % (module_name, func_name))
@@ -189,7 +175,7 @@ class Test(BaseObject):
             print "Function '%s' is not found" % self.procedure
             return
 
-        func(self, output_file)
+        func(self)
 
     def teardown_environment(self):
         self.remove_instances()
@@ -293,9 +279,7 @@ class Tenant(BaseObject):
             network.remove()
 
     def initialize(self):
-        print 'initialize() called.'
         deadline = time.time() + settings.ACTIVATION_TIMEOUT
-        active_servers = []
         while time.time() < deadline:
             active_servers = api_helpers.get_servers(self.tenant_id)
             if all(s.status in ('ACTIVE', 'ERROR')
@@ -331,7 +315,7 @@ class Tenant(BaseObject):
             if host is not None:
                 if host != server_host:
                     continue
-            elif az is not None:
+            if az is not None:
                 if az != server_az:
                     continue
             if not self.is_server_connected(server.id, network_id):
@@ -341,14 +325,17 @@ class Tenant(BaseObject):
             if data_ip is None:
                 continue
             self.available_servers.pop(i)
-            mgmt = server.addresses[settings.MANAGEMENT_NET_NAME]
+            mgmt = server.addresses[settings.MANAGEMENT_NAME]
             print "finished allocation"
+            print 'returning %s %s %s' % (server.id, data_ip, mgmt[0]['addr'])
             return server.id, data_ip, mgmt[0]['addr']
         print "spawning new server"
         # If no luck, then allocate new server
-        return api_helpers.create_server(self.tenant_id, network_id, name,
-                                         key_name, availability_zone,
-                                         floating_ip=floating_ip)
+        server_id, data_ip, mgmt = api_helpers.create_server(self.tenant_id, network_id, name,
+                                                            key_name, availability_zone,
+                                                            floating_ip=floating_ip)
+        print 'returning %s %s %s' % (server_id, data_ip, mgmt)
+        return server_id, data_ip, mgmt
 
     def is_server_connected(self, server_id, network_id):
         network_servers = self.connected_servers.get(network_id)
