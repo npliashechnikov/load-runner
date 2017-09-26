@@ -5,6 +5,9 @@ OS_DOMAIN_NAME='default'
 OS_USERNAME = 'admin'
 OS_TENANT = 'admin'
 OS_PASSWORD = 'changeme'
+OS_INSECURE = True
+
+OS_REQUIRED_ROLES = ['admin']
 SPAWN_DELAY = 0
 OS_REGION_NAME='RegionOne'
 ACTIVATION_TIMEOUT = 120

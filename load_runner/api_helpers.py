@@ -1,9 +1,9 @@
 from keystoneclient.v3.client import Client
 from neutronclient.neutron import client as neutron
-from novaclient.v1_1 import client as nova
+from novaclient.v2 import client as nova
 from novaclient import exceptions as nova_exceptions
-from keystoneclient.apiclient import exceptions as keystone_exceptions
 
+from keystoneclient import exceptions as keystone_exceptions
 
 import settings
 import time
@@ -13,27 +13,13 @@ keystone_client = None
 neutron_client = None
 nova_clients = {}
 servers = {}
-
-class ServersSpawner:
-    usable_availability_zones = []
-    heuristics = [1, 1, 1, 1, 10, 20]
-    instances = []
-    current_heur = 0
- 
-    @classmethod
-    def spawn_server(cls, tenant_id, network_id, key_name, availability_zone, scheduler_hints):
-        client = get_nova_client(tenant_id)
-        server = client.servers.create(
-            name, settings.IMAGE_ID, settings.FLAVOR_ID,
-            nics=[{'net-id': settings.MANAGEMENT_NETWORK_ID},
-                 {'net-id': network_id}],
-            key_name=key_name,
-            availability_zone=availability_zone,
-            scheduler_hints=scheduler_hints)
+keystone_session = None
 
 
 def get_keystone_client():
     global keystone_client
+    global keystone_session
+
     if keystone_client is None:
         url = settings.OS_AUTH_URL
         keystone_client = Client(user_domain_name=settings.OS_DOMAIN_NAME,
@@ -41,35 +27,45 @@ def get_keystone_client():
                                  project_name=settings.OS_TENANT,
                                  project_domain_name=settings.OS_DOMAIN_NAME,
                                  auth_url=url.replace('/v2.0', '/v3'),
-                                 insecure=True,
+                                 insecure=settings.OS_INSECURE,
                                  region=settings.OS_REGION_NAME,
                                  endpoint=url.replace('/v2.0', '/v3'))
         keystone_client.authenticate()
+        keystone_session = keystone_client.session
         
     return keystone_client
 
 
 def get_neutron_client():
     global neutron_client
+    if not keystone_session:
+        get_keystone_client()
     if neutron_client is None:
-        neutron_client = neutron.Client(
-            '2.0', auth_url=settings.OS_AUTH_URL,
-            username=settings.OS_USERNAME, password=settings.OS_PASSWORD,
-            tenant_name=settings.OS_TENANT, insecure=True)
+        neutron_client = neutron.Client('2.0',
+                                        session=keystone_session,
+                                        insecure=settings.OS_INSECURE)
     return neutron_client
 
 
 def get_nova_client(tenant_id=None):
     global nova_clients
+    if not keystone_session:
+        get_keystone_client()
     client = nova_clients.get(tenant_id)
     if client is None:
         if tenant_id is None:
             tenant_name = settings.OS_TENANT
         else:
             tenant_name = None
-        client = nova.Client(settings.OS_USERNAME, settings.OS_PASSWORD,
-                             tenant_name, settings.OS_AUTH_URL,
-                             tenant_id=tenant_id, insecure=True)
+
+        client = nova.Client(username=settings.OS_USERNAME,
+                             password=settings.OS_PASSWORD,
+                             project_name=tenant_name,
+                             project_id=tenant_id,
+                             region_name=settings.OS_REGION_NAME,
+                             user_domain_name=settings.OS_DOMAIN_NAME,
+                             project_domain_name=settings.OS_DOMAIN_NAME,
+                             insecure=settings.OS_INSECURE)
         nova_clients[tenant_id] = client
     return client
 
@@ -81,40 +77,27 @@ def get_or_create_tenant(tenant_name):
         tenant = client.projects.find(name=tenant_name)
     except keystone_exceptions.NotFound:
         tenant = client.projects.create(tenant_name, settings.OS_DOMAIN_NAME)
-        time.sleep(4)
+        time.sleep(4) # allow for Contrail to sync with Keystone
 
     def user_ensure_role(name):
-        role_assignments = client.role_assignments.list(user=user_id, project=tenant.id)
-        our_assignments = []
-        roles_raw = client.roles.list()
-        roles = {}
-        roles_rev = {}
-        for role in roles_raw:
-            roles[role.id] = role.name
-            roles_rev[role.name] = role.id
-        for assignment in role_assignments:
-            if not hasattr(assignment, 'user'):
-                continue
-            if assignment.user['id'] != user_id:
-                continue
-            if not 'project' in assignment.scope:
-                continue
-            if tenant.id != assignment.scope['project']['id']:
-                continue
-            if roles[assignment.role['id']] != name:
-                continue
-            return
+        import sys
         try:
             role_id = client.roles.find(name=name).id
         except keystone_exceptions.NotFound:
-            print "role %s not found." % name
+            print "role %s not found. Please check configuration." % name
+            sys.exit(1)
+        try:
+            client.roles.grant(role_id, user=user_id, project=tenant.id)
+        except keystone_exceptions.Forbidden:
+            print "Can't grant role %s in tenant %s - access denied. Please check if user has admin privileges." % (role_id, tenant.id)
+            sys.exit(1)
+        except keystone_exceptions.Conflict:
+            print "Role %s already granted for %s in %s - proceeding." % (role_id, user_id, tenant.id)
             return
-        client.roles.grant(role_id, user=user_id, project=tenant.id)
-
- 
 
     user_id = client.users.find(name=settings.OS_USERNAME).id
-    user_ensure_role('admin')
+    for role in settings.OS_REQUIRED_ROLES:
+        user_ensure_role(role)
 
     if settings.UPDATE_NEUTRON_QUOTAS:
         get_neutron_client().update_quota(
