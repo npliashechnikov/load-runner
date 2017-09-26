@@ -1,19 +1,45 @@
+
+
 from keystoneclient.v3.client import Client
 from neutronclient.neutron import client as neutron
 from novaclient.v2 import client as nova
-from novaclient import exceptions as nova_exceptions
+from cinderclient.v2.client import Client as cinder
 
+from cinderclient import exceptions as cinder_exceptions
+from novaclient import exceptions as nova_exceptions
 from keystoneclient import exceptions as keystone_exceptions
+from neutronclient.client import exceptions as neutron_exceptions
 
 import settings
+import sys
 import time
 import traceback
 
+all_ports = {}
+cinder_clients = {}
 keystone_client = None
 neutron_client = None
 nova_clients = {}
 servers = {}
 keystone_session = None
+fips = {}
+
+
+def get_keystone_session(tenant_name=None, tenant_id=None):
+    url = settings.OS_AUTH_URL
+    keystone_client = Client(user_domain_name=settings.OS_DOMAIN_NAME,
+                             username=settings.OS_USERNAME, password=settings.OS_PASSWORD,
+                             project_name=tenant_name,
+                             project_id=tenant_id,
+                             project_domain_name=settings.OS_DOMAIN_NAME,
+                             auth_url=settings.OS_AUTH_URL.replace('/v2.0', '/v3'),
+                             insecure=settings.OS_INSECURE,
+                             region=settings.OS_REGION_NAME,
+                             endpoint=settings.OS_AUTH_URL.replace('/v2.0', '/v3'))
+
+    keystone_client.authenticate()
+    keystone_session = keystone_client.session
+    return keystone_client, keystone_session
 
 
 def get_keystone_client():
@@ -22,17 +48,8 @@ def get_keystone_client():
 
     if keystone_client is None:
         url = settings.OS_AUTH_URL
-        keystone_client = Client(user_domain_name=settings.OS_DOMAIN_NAME,
-                                 username=settings.OS_USERNAME, password=settings.OS_PASSWORD,
-                                 project_name=settings.OS_TENANT,
-                                 project_domain_name=settings.OS_DOMAIN_NAME,
-                                 auth_url=url.replace('/v2.0', '/v3'),
-                                 insecure=settings.OS_INSECURE,
-                                 region=settings.OS_REGION_NAME,
-                                 endpoint=url.replace('/v2.0', '/v3'))
-        keystone_client.authenticate()
-        keystone_session = keystone_client.session
-        
+        keystone_client, keystone_session = get_keystone_session(settings.OS_TENANT)
+
     return keystone_client
 
 
@@ -49,38 +66,48 @@ def get_neutron_client():
 
 def get_nova_client(tenant_id=None):
     global nova_clients
-    if not keystone_session:
-        get_keystone_client()
     client = nova_clients.get(tenant_id)
     if client is None:
         if tenant_id is None:
             tenant_name = settings.OS_TENANT
         else:
             tenant_name = None
+        _, session = get_keystone_session(tenant_name, tenant_id)
 
-        client = nova.Client(username=settings.OS_USERNAME,
-                             password=settings.OS_PASSWORD,
-                             project_name=tenant_name,
-                             project_id=tenant_id,
-                             region_name=settings.OS_REGION_NAME,
-                             user_domain_name=settings.OS_DOMAIN_NAME,
-                             project_domain_name=settings.OS_DOMAIN_NAME,
-                             insecure=settings.OS_INSECURE)
+        client = nova.Client(session=session, insecure=settings.OS_INSECURE)
         nova_clients[tenant_id] = client
+    return client
+
+
+def get_cinder_client(tenant_id=None):
+    global cinder_clients
+    client = cinder_clients.get(tenant_id)
+
+    if client is None:
+        if tenant_id is None:
+            tenant_name = settings.OS_TENANT
+        else:
+            tenant_name = None
+        _, session = get_keystone_session(tenant_name, tenant_id)
+
+        client = cinder(session=session, insecure=settings.OS_INSECURE)
+        cinder_clients[tenant_id] = client
     return client
 
 
 def get_or_create_tenant(tenant_name):
     client = get_keystone_client()
-
     try:
         tenant = client.projects.find(name=tenant_name)
     except keystone_exceptions.NotFound:
-        tenant = client.projects.create(tenant_name, settings.OS_DOMAIN_NAME)
+        try:
+            tenant = client.projects.create(tenant_name, settings.OS_DOMAIN_NAME)
+        except keystone_exceptions.Forbidden:
+            print "Unable to create tenant. Please check if user has admin privileges"
+            sys.exit(1)
         time.sleep(4) # allow for Contrail to sync with Keystone
 
     def user_ensure_role(name):
-        import sys
         try:
             role_id = client.roles.find(name=name).id
         except keystone_exceptions.NotFound:
@@ -117,7 +144,10 @@ def get_or_create_tenant(tenant_name):
 
 def delete_tenant(tenant_id):
     client = get_keystone_client()
-    client.projects.delete(tenant_id)
+    try:
+        client.projects.delete(tenant_id)
+    except keystone_exceptions.Forbidden:
+        print "Unable to delete tenant %s - access denied."
 
 
 def get_or_create_network(tenant_id, network_name):
@@ -125,10 +155,14 @@ def get_or_create_network(tenant_id, network_name):
     existing = client.list_networks(
         name=network_name, tenant_id=tenant_id).get('networks', [])
     if not existing:
-        network = client.create_network({'network': {
-            'name': network_name,
-            'admin_state_up': True,
-            'tenant_id': tenant_id}})['network']
+        try:
+            network = client.create_network({'network': {
+                'name': network_name,
+                'admin_state_up': True,
+                'tenant_id': tenant_id}})['network']
+        except neutron_exceptions.Forbidden:
+            print 'Unable to create network in tenant %s - access denied.' % tenant_id
+            sys.exit(1)
     else:
         network = existing[0]
     return network['id']
@@ -136,7 +170,12 @@ def get_or_create_network(tenant_id, network_name):
 
 def delete_network(network_id):
     client = get_neutron_client()
-    client.delete_network(network_id)
+    try:
+        client.delete_network(network_id)
+    except neutron_exceptions.Forbidden:
+        print 'Unable to delete network %s - access denied.' % network_id
+    except neutron_exceptions.Conflict:
+        print 'Unable to delete network %s - ports still exist in it.' % network_id
 
 
 def get_or_create_subnet(tenant_id, network_id, network_name, cidr):
@@ -149,17 +188,22 @@ def get_or_create_subnet(tenant_id, network_id, network_name, cidr):
                                ' again to change network CIDRs.')
         else:
             return existing[0]['id']
-    subnet = client.create_subnet({
-        'subnet': {
-            'name': network_name,
-            'network_id': network_id,
-            'tenant_id': tenant_id,
-            'enable_dhcp': True,
-            'dns_nameservers': ['8.8.8.8'],
-            'cidr': cidr,
-            'ip_version': 4
-        }
-    })
+    try:
+        subnet = client.create_subnet({
+            'subnet': {
+                'name': network_name,
+                'network_id': network_id,
+                'tenant_id': tenant_id,
+                'enable_dhcp': True,
+                'dns_nameservers': ['8.8.8.8'],
+                'cidr': cidr,
+                'ip_version': 4
+            }
+        })
+    except neutron_exceptions.Forbidden:
+        print 'Unable to create subnet - access denied. Ensure the user has rights to create subnets.'
+        sys.exit(1)
+
     return subnet['subnet']['id']
 
 
@@ -189,6 +233,9 @@ def create_server_config_drive(tenant_id, network_id, name, key_name,
 
     MAX_TRIES = 15
     tries = 0
+    private_port = None
+    management_port = None
+
     while tries < MAX_TRIES:
         tries += 1
         try:
@@ -218,6 +265,10 @@ def create_server_config_drive(tenant_id, network_id, name, key_name,
                 raise
             print 'For', tries, 'time, sleeping 20 sec...'
             time.sleep(20)
+
+    if not (private_port and management_port):
+        print "Port creation failed in Neutron. Please check cloud configuration."
+        sys.exit(1)
 
     private_ip = private_port['fixed_ips'][0]['ip_address']
     management_ip = management_port['fixed_ips'][0]['ip_address']
@@ -265,14 +316,12 @@ def create_server_dhcp(tenant_id, network_id, name, key_name,
                 server_nets = server.networks
                 management_ip = server_nets.pop(settings.MANAGEMENT_NAME)[0]
                 private_ip = server_nets.values()[0][0]
-                #if server.status == 'ACTIVE':
-                break
                 if time.time() - initial_t > settings.BOOT_TIMEOUT:
                     print "Timeout while waiting for server %s to boot, terminating test." % server.id
-                    import sys
                     sys.exit(1)
+                break
             except Exception, e:
-                pass
+                pass  # avoid intermittent Nova/Contrail failures
         time.sleep(settings.API_QUERY_TIMEOUT)
         print (time.time() - t)
 
@@ -282,9 +331,6 @@ def create_server_dhcp(tenant_id, network_id, name, key_name,
             fip = create_free_floatingip(tenant_id, floating_ip)
         assign_floating_ip(fip, server.id, network_id)
 
-    #server_nets = server.networks
-    #management_ip = server_nets.pop(settings.MANAGEMENT_NAME)[0]
-    #private_ip = server_nets.values()[0][0]
     print "finished creating server"
     return server.id, private_ip, management_ip
 
@@ -314,7 +360,12 @@ def get_or_create_router(tenant_id, name, args):
         data = dict(args.items())
         data['tenant_id'] = tenant_id
         data['name'] = name
-        router = client.create_router(dict(router=data))
+        try:
+            router = client.create_router(dict(router=data))
+        except neutron_exceptions.Forbidden:
+            print 'Creating router failed - access denied.'
+            sys.exit(1)
+
         return router['router']['id']
 
 
@@ -356,27 +407,31 @@ def ensure_default_sg_state(tenant_id):
         tenant_id=tenant_id, name='default').get('security_groups', [])
     security_group = security_groups[0]
     # Remove rules with remote_group_id or IPv6
-    need_allow = set(('ingress', 'egress'))
-    for rule in security_group['security_group_rules']:
-        if rule['remote_group_id'] is not None or rule['ethertype'] != 'IPv4':
-            client.delete_security_group_rule(rule['id'])
-        elif (rule['direction'] == 'ingress' and
-              rule['remote_ip_prefix'] == '0.0.0.0/0'):
-            need_allow.discard('ingress')
-        elif (rule['direction'] == 'egress' and
-              rule['remote_ip_prefix'] == '0.0.0.0/0'):
-            need_allow.discard('egress')
-    # Add allow all security group
-    for direction in need_allow:
-        client.create_security_group_rule({
-            'security_group_rule': {
-                'security_group_id': security_group['id'],
-                'direction': direction,
-                'ethertype': 'IPv4',
-                'tenant_id': tenant_id,
-                'remote_ip_prefix': '0.0.0.0/0'
-            }
-        })
+    need_allow = {'ingress', 'egress'}
+    try:
+        for rule in security_group['security_group_rules']:
+            if rule['remote_group_id'] is not None or rule['ethertype'] != 'IPv4':
+                client.delete_security_group_rule(rule['id'])
+            elif (rule['direction'] == 'ingress' and
+                  rule['remote_ip_prefix'] == '0.0.0.0/0'):
+                need_allow.discard('ingress')
+            elif (rule['direction'] == 'egress' and
+                  rule['remote_ip_prefix'] == '0.0.0.0/0'):
+                need_allow.discard('egress')
+        # Add allow all security group
+        for direction in need_allow:
+            client.create_security_group_rule({
+                'security_group_rule': {
+                    'security_group_id': security_group['id'],
+                    'direction': direction,
+                    'ethertype': 'IPv4',
+                    'tenant_id': tenant_id,
+                    'remote_ip_prefix': '0.0.0.0/0'
+                }
+            })
+    except neutron_exceptions.Forbidden:
+        print 'Security group operation failed - access denied.'
+        sys.exit(1)
 
 
 def get_ports(tenant_id):
@@ -388,6 +443,7 @@ def get_ports(tenant_id):
             continue
         result.setdefault(port['device_id'], []).append(port['network_id'])
     return result
+
 
 def get_network_servers(network_id):
     client = get_neutron_client()
@@ -401,8 +457,6 @@ def get_network_servers(network_id):
         result.add(port['device_id'])
     return result
 
-
-fips = {}
 
 def get_free_floatingip(tenant_id, network_id):
     global fips
@@ -418,9 +472,13 @@ def get_free_floatingip(tenant_id, network_id):
 
 def create_free_floatingip(tenant_id, network_id):
     client = get_neutron_client()
-    return client.create_floatingip(
-        dict(floatingip=dict(tenant_id=tenant_id,
-                             floating_network_id=network_id)))['floatingip']
+    try:
+        return client.create_floatingip(
+            dict(floatingip=dict(tenant_id=tenant_id,
+                                 floating_network_id=network_id)))['floatingip']
+    except neutron_exceptions.Forbidden:
+        print 'Floating IP creation failed - access denied.'
+        sys.exit(1)
 
 
 def assign_floating_ip(fip, server_id, network_id):
@@ -439,8 +497,6 @@ def assign_floating_ip(fip, server_id, network_id):
             'fixed_ip_address': port['fixed_ips'][0]['ip_address']}))
 
 
-all_ports = {}
-
 def get_data_ip(server_id, network_id, floating_ip):
     x = time.time()
     client = get_neutron_client()
@@ -452,7 +508,6 @@ def get_data_ip(server_id, network_id, floating_ip):
             all_ports.setdefault(p['device_id'], []).append(p)
         ports = all_ports.get(server_id, [])
 
-    #ports = client.list_ports(device_id=server_id)['ports']
     for port in ports:
         if port['network_id'] == network_id:
             break
