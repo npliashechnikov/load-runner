@@ -212,7 +212,7 @@ def fio_volumes(test):
             client_commands.append((server.management_ip, run_fio))
 
     client_results = remote.run_commands(
-        client_commands, iperf3.Iperf3Stats(test),
+        client_commands, fio.FioStats(test),
         test.args.get('client_timeout', 600))
 
     client_results.output()
@@ -242,7 +242,7 @@ def fio_ephemeral(test):
             client_commands.append((server.management_ip, run_fio))
 
     client_results = remote.run_commands(
-        client_commands, iperf3.Iperf3Stats(test),
+        client_commands, fio.FioStats(test),
         test.args.get('client_timeout', 600))
 
     client_results.output()
