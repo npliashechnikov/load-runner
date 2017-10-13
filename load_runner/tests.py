@@ -6,7 +6,7 @@ import time
 
 from load_runner import remote
 from load_runner import settings
-from load_runner.data import iperf3
+from load_runner.data import iperf3, fio
 from load_runner.data import ping
 
 
@@ -165,6 +165,52 @@ def iperf_pairs_duplex(test):
             client_commands.append((server.management_ip, run_server))
 
     print 'Running iperf...'
+    client_results = remote.run_commands(
+        client_commands, iperf3.Iperf3Stats(test),
+        test.args.get('client_timeout', 600))
+
+    client_results.output()
+
+
+def fio_volumes(test):
+    tenants = test.tenants
+
+    kill_commands = []
+    run_kill = ['killall', 'fio']
+    for group in test.group_servers_by_role().values():
+        for server in group:
+            kill_commands.append((server.management_ip, run_kill))
+    remote.run_commands(
+        kill_commands, timeout=test.args.get('server_timeout', 30))
+
+
+    # Run clients...
+
+    prepare_commands = []
+    client_commands = []
+    device_name = test.args.get('device_name', '/dev/vdb')
+    prepare_fs = ['/sbin/mkfs.ext4', device_name]
+    mount_point = test.args.get('mount_point', '/mnt/fiodisk')
+    mount_vol = ['mount', device_name, mount_point]
+
+    for group in test.group_servers_by_role().values():
+        for server in group:
+            prepare_commands.append((server.management_ip, prepare_fs))
+            prepare_commands.append((server.management_ip, mount_vol))
+
+    print 'formatting and mounting volumes...'
+    client_results = remote.run_commands(
+        prepare_commands,
+        test.args.get('server_timeout', 30))
+
+    additional_args = test.args.get('fio_args', [])
+
+    run_fio = ['fio', '--directory=', mount_point, '--name=', test.name, '--output-format=', 'json'].extend(additional_args)
+    print 'Running fio...'
+    for group in test.group_servers_by_role().values():
+        for server in group:
+            client_commands.append((server.management_ip, run_fio))
+
     client_results = remote.run_commands(
         client_commands, iperf3.Iperf3Stats(test),
         test.args.get('client_timeout', 600))
