@@ -205,7 +205,7 @@ def fio_volumes(test):
 
     additional_args = test.args.get('fio_args', [])
 
-    run_fio = ['fio', '--directory=', mount_point, '--name=', test.name, '--output-format=', 'json'].extend(additional_args)
+    run_fio = ['fio', '--directory=', mount_point, '--name=', test.name, '--output-format=', 'json', '--group_reporting'].extend(additional_args)
     print 'Running fio...'
     for group in test.group_servers_by_role().values():
         for server in group:
@@ -216,3 +216,34 @@ def fio_volumes(test):
         test.args.get('client_timeout', 600))
 
     client_results.output()
+
+
+def fio_ephemeral(test):
+    tenants = test.tenants
+
+    kill_commands = []
+    run_kill = ['killall', 'fio']
+    for group in test.group_servers_by_role().values():
+        for server in group:
+            kill_commands.append((server.management_ip, run_kill))
+    remote.run_commands(
+        kill_commands, timeout=test.args.get('server_timeout', 30))
+
+
+    # Run clients...
+
+    client_commands = []
+    additional_args = test.args.get('fio_args', [])
+
+    run_fio = ['fio', '--directory=', '/tmp', '--name=', test.name, '--output-format=', 'json', '--group_reporting'].extend(additional_args)
+    print 'Running fio...'
+    for group in test.group_servers_by_role().values():
+        for server in group:
+            client_commands.append((server.management_ip, run_fio))
+
+    client_results = remote.run_commands(
+        client_commands, iperf3.Iperf3Stats(test),
+        test.args.get('client_timeout', 600))
+
+    client_results.output()
+
