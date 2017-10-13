@@ -1,0 +1,32 @@
+tests:
+  - name: basic_fio_volume_test
+    procedure: load_runner.tests.fio_volumes
+    args:
+      fio_args: ['--size=', '8G', '--numjobs=', '8', '--bs', '1M', '--rw=', 'randread']
+    tenants:
+      - name: fio_volume_test
+        count: 1
+        networks:
+          - name: fio_datanet
+            count: 1
+            servers:
+              - role: server
+                count: 10
+                volume_size: 40
+                availability_zones: ['rack_14:node-13']
+
+  - name: basic_fio_ephemeral_test
+    procedure: load_runner.tests.fio_ephemeral
+    args:
+      fio_args: ['--size=', '8G', '--numjobs=', '8', '--bs', '1M', '--rw=', 'randread']
+    tenants:
+      - name: fio_ephemeral_test
+        count: 1
+        networks:
+          - name: fio_datanet
+            count: 1
+            servers:
+              - role: server
+                count: 10
+                volume_size: 40
+                availability_zones: ['rack_14:node-13']
